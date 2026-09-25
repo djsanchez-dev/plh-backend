@@ -19,4 +19,10 @@ class JwtServiceTest {
         assertThatCode(() -> new JwtService(base64Secret, 86400000))
                 .doesNotThrowAnyException();
     }
+
+    @Test
+    void shouldAcceptShortPlainTextSecret() {
+        assertThatCode(() -> new JwtService("short-secret", 86400000))
+                .doesNotThrowAnyException();
+    }
 }

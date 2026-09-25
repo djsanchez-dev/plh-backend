@@ -4,8 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -29,14 +32,26 @@ public class JwtService {
 			throw new IllegalArgumentException("JWT secret cannot be blank");
 		}
 
+		byte[] candidate;
 		try {
-			return Decoders.BASE64.decode(secret);
+			candidate = Decoders.BASE64.decode(secret);
 		} catch (RuntimeException ignored) {
 			try {
-				return Decoders.BASE64URL.decode(secret);
+				candidate = Decoders.BASE64URL.decode(secret);
 			} catch (RuntimeException ignoredAgain) {
-				return secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+				candidate = secret.getBytes(StandardCharsets.UTF_8);
 			}
+		}
+
+		if (candidate.length >= 32) {
+			return candidate;
+		}
+
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			return digest.digest(secret.getBytes(StandardCharsets.UTF_8));
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException("SHA-256 not available in the runtime", e);
 		}
 	}
 
