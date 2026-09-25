@@ -19,8 +19,25 @@ public class JwtService {
 	public JwtService(
 			@Value("${app.jwt.secret}") String secret,
 			@Value("${app.jwt.expiration-ms}") long expirationMs) {
-		this.signingKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+		byte[] keyBytes = toSigningKey(secret);
+		this.signingKey = Keys.hmacShaKeyFor(keyBytes);
 		this.expirationMs = expirationMs;
+	}
+
+	private byte[] toSigningKey(String secret) {
+		if (secret == null || secret.isBlank()) {
+			throw new IllegalArgumentException("JWT secret cannot be blank");
+		}
+
+		try {
+			return Decoders.BASE64.decode(secret);
+		} catch (RuntimeException ignored) {
+			try {
+				return Decoders.BASE64URL.decode(secret);
+			} catch (RuntimeException ignoredAgain) {
+				return secret.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+			}
+		}
 	}
 
 	public String generateToken(UserDetails userDetails) {
