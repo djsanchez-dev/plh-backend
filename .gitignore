@@ -33,3 +33,8 @@ build/
 
 # Local database credentials
 application-local.properties
+
+# Entorno (nunca subir secretos reales)
+.env
+.env.*
+!.env.example
